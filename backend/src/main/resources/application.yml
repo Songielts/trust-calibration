@@ -1,0 +1,51 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: trust-calibration
+  config:
+    # Optional, git-ignored file for your own secrets (e.g. the LLM API key); see local-secrets.example.yml
+    import: optional:file:./local-secrets.yml
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:trust_calibration}?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
+    username: root
+    password: your password
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+study:
+  # Token required for /api/admin/** (sent as header X-Admin-Token). Change before deploying.
+  admin-token: ${ADMIN_TOKEN:admin123}
+  # Allow demo links such as http://localhost:5173/?demo=CAPABILITY that let a presenter choose the
+  # condition. Demo sessions are flagged and excluded from the analysis by default.
+  # Set DEMO_MODE=false when collecting real data.
+  demo-mode-enabled: ${DEMO_MODE:true}
+  # Frontend origin(s) allowed by CORS (not needed when the frontend proxies /api)
+  allowed-origins: ${CORS_ORIGINS:http://localhost:5173,http://127.0.0.1:5173,http://localhost:8081}
+
+# ---------------------------------------------------------------------------
+# LLM agent (optional). Any OpenAI-compatible /chat/completions API works.
+# The key must never be committed. Provide it EITHER as an environment variable
+#   Windows PowerShell:  $env:LLM_API_KEY="sk-..."      macOS/Linux:  export LLM_API_KEY=sk-...
+# OR copy local-secrets.example.yml to local-secrets.yml (git-ignored) and put the key there.
+# Without a key the system runs normally with the scripted agent only.
+# ---------------------------------------------------------------------------
+llm:
+  base-url: ${LLM_BASE_URL:https://api.deepseek.com}
+  model: ${LLM_MODEL:deepseek-chat}
+  api-key: your key
+  temperature: ${LLM_TEMPERATURE:0.7}
+  timeout-seconds: ${LLM_TIMEOUT_SECONDS:45}
+  max-tokens: 600
+  # parallel calls during an evaluation run
+  evaluation-threads: 4

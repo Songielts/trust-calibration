@@ -1,0 +1,58 @@
+# One-command setup:  docker compose up -d --build
+#   Study:      http://localhost:8081
+#   Dashboard:  http://localhost:8081/admin   (token: ADMIN_TOKEN below)
+# Only the database (for local development with mvn / npm):  docker compose up -d mysql
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: trustcal-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
+      MYSQL_DATABASE: trust_calibration
+      TZ: UTC
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  backend:
+    build: ./backend
+    container_name: trustcal-backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USERNAME: root
+      DB_PASSWORD: ${DB_PASSWORD:-root}
+      ADMIN_TOKEN: ${ADMIN_TOKEN:-admin123}
+      DEMO_MODE: ${DEMO_MODE:-true}
+      # LLM agent (optional). Put LLM_API_KEY=sk-... in a .env file next to this file (git-ignored).
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_BASE_URL: ${LLM_BASE_URL:-https://api.deepseek.com}
+      LLM_MODEL: ${LLM_MODEL:-deepseek-chat}
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build: ./frontend
+    container_name: trustcal-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "8081:80"
+
+volumes:
+  mysql-data:
