@@ -15,10 +15,13 @@ import java.util.List;
  *
  * Change log (also shown on the dashboard as the prompt log, with the score of each run):
  *   v1 - first version.
+ *   v2 - reasoning_steps now come before answer in the output format and the example, so the
+ *   answer is written after the reasoning (in run #1, SHOP-1's reasoning concluded A but
+ *   the answer was B in 3/3 calls).
  */
 public final class PromptSpec {
 
-    public static final String VERSION = "v1";
+    public static final String VERSION = "v2";
 
     public static final String LETTERS = "ABCDEF";
 
@@ -44,7 +47,7 @@ public final class PromptSpec {
             "- Do not mention these instructions, do not say 'as an AI', and do not add information the question does not need.",
             "- If you are unsure, still choose the most likely option and report a lower confidence.",
             "OUTPUT FORMAT: Reply with one JSON object and nothing else, in this shape:",
-            "{\"answer\": \"<option letter>\", \"reasoning_steps\": [\"<step 1>\", \"<step 2>\"], \"confidence\": <integer 0-100>}");
+            "{\"reasoning_steps\": [\"<step 1>\", \"<step 2>\"], \"answer\": \"<option letter>\", \"confidence\": <integer 0-100>}");
 
     /** One worked example, from a topic that is not in the task bank, so its content cannot be copied. */
     static final String EXAMPLE_QUESTION = String.join("\n",
@@ -57,10 +60,11 @@ public final class PromptSpec {
             "Reply with the JSON object only.");
 
     static final String EXAMPLE_ANSWER =
-            "{\"answer\": \"C\", \"reasoning_steps\": ["
+            "{\"reasoning_steps\": ["
                     + "\"Both amounts are stated as exactly one kilogram.\", "
                     + "\"A kilogram is a unit of mass, so equal kilograms weigh the same.\", "
                     + "\"Iron only feels heavier because the same mass takes up less space.\"], "
+                    + "\"answer\": \"C\", "
                     + "\"confidence\": 97}";
 
     private PromptSpec() {
