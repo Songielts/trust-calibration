@@ -31,7 +31,9 @@ public final class PromptSpec {
             "\"answer\" is exactly one of the option letters shown.",
             "\"reasoning_steps\" contains 2 to 5 non-empty steps.",
             "Each step is at most 50 words.",
-            "\"confidence\" is an integer from 0 to 100.");
+            "\"confidence\" is an integer from 0 to 100.",
+            "\"confidence\" is an integer from 0 to 100.",
+            "No reasoning step says 'as an AI'.");
 
     /** Criteria that need a person (checked when the researcher reviews the frozen answers). */
     public static final List<String> HUMAN_CRITERIA = List.of(
@@ -80,9 +82,7 @@ public final class PromptSpec {
         return messages;
     }
 
-    static String taskMessage(DecisionTask task, String domainName) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Topic: ").append(domainName).append('\n');
+    static String taskMessage(DecisionTask task, String domainName) {StringBuilder sb = new StringBuilder().append("Topic: ").append(domainName).append('\n');
         sb.append("Question: ").append(task.getPrompt()).append('\n');
         sb.append("Options:\n");
         for (int i = 0; i < task.getOptions().size(); i++) {

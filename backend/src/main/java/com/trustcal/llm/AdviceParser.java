@@ -6,7 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-
+import java.util.Locale;
+import java.util.regex.Pattern;
 /**
  * Checks a model reply against the checkable success criteria of {@link PromptSpec}.
  * A reply that fails any criterion is rejected and never shown to a participant.
@@ -18,7 +19,7 @@ public final class AdviceParser {
     public static final int MIN_STEPS = 2;
     public static final int MAX_STEPS = 5;
     public static final int MAX_WORDS_PER_STEP = 50;
-
+    private static final Pattern AS_AN_AI = Pattern.compile("\\bas an ai\\b", Pattern.CASE_INSENSITIVE);
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     public record ParsedAdvice(int answerIndex, List<String> reasoningSteps, int confidence) {
@@ -72,6 +73,9 @@ public final class AdviceParser {
             String text = s.asText().trim();
             if (text.split("\\s+").length > MAX_WORDS_PER_STEP) {
                 throw new InvalidOutputException("A reasoning step is longer than " + MAX_WORDS_PER_STEP + " words");
+            }
+            if (AS_AN_AI.matcher(text).find()) {
+                throw new InvalidOutputException("A reasoning step says 'as an AI'");
             }
             out.add(text);
         }

@@ -53,7 +53,7 @@ Then on the dashboard → **AI agent**: send a test call → run an evaluation �
 
 **Preview a condition:** `/?demo=CAPABILITY_REASONING` (also `CONTROL`, `CAPABILITY`, `REASONING`; `/?demo=off` to stop). Demo sessions are excluded from the analysis.
 
-**Tests:** `cd backend` → `mvn test` (24 tests, no database or API key needed).
+**Tests:** `cd backend` → `mvn test` (25 tests, no database or API key needed).
 
 ## LLM evaluation
 
@@ -86,6 +86,7 @@ Each run sends all 16 tasks to the model three times with the same prompt and te
 | 5–6 Nov | Code walk-through with the debugger and the SQL log | To understand balanced assignment, the question-order rule and transactions | Stepped through `nextBalancedCondition` (the counts matched MySQL); confirmed that skipping a question is refused by the server, not only by the page; a forced exception in `submitFinal` rolled back the update (test code removed afterwards) |
 | 8 Nov | First real DeepSeek calls and evaluation run #1 (prompt v1) | Confirm the LLM path with the real API and measure accuracy per topic | 48/48 valid, 45/48 correct; all 16 frozen answers reviewed by hand (SHOP-1 reasoning–answer contradiction; SHOP-3 faulty reasoning, frozen reply replaced) |
 | 8 Nov | **Prompt v2**: `reasoning_steps` before `answer`; evaluation run #2 | In v1 the model chose an answer before reasoning (SHOP-1) | 48/48 valid, 48/48 correct; SHOP-1 and SHOP-3 reasoning now match the answers (3 calls per task, so a small test) |
+| 9 Nov | `AdviceParser` rejects reasoning steps that say "as an AI" (+ test) | The prompt forbids it, but the parser did not check it | Test written first and seen to fail; with the rule, all 25 tests pass. I also recomputed over- and under-reliance for my own session from the exported trials and they matched the dashboard |
 
 Commits: the repository was created on 8 Nov. v1–v3 were built before version control, so the first commit imports v3 together with my first changes; prompt v2 and later work are separate commits in the history.
 
@@ -97,7 +98,7 @@ I used **Claude (Anthropic, claude.ai)** throughout:
 - **Mapping to lectures**: asked how the design relates to the Weeks 1–4 concepts.
 - **Learning the code**: used it as a tutor while I worked through the code over two weeks.
 - **README and report drafts.**
-
+- Added a validation rule to `AdviceParser` and wrote its test first (it failed, then passed); recomputed reliance measures from the exported CSV by hand.
 What I checked or changed myself:
 - Ran the whole system locally on Windows and completed participant sessions in each condition.
 - Checked the stored data in MySQL and followed the generated SQL with the Hibernate log.

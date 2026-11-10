@@ -126,6 +126,16 @@ class LlmAgentTest {
     }
 
     @Test
+    void parserRejectsStepsThatSayAsAnAi() throws Exception {
+        String bad = "{\"answer\": \"A\", \"reasoning_steps\": [\"As an AI, I cannot taste food.\", \"Option A fits best.\"], \"confidence\": 60}";
+        assertThrows(AdviceParser.InvalidOutputException.class, () -> AdviceParser.parse(bad, 3));
+
+        // 边界情况：普通句子里碰巧包含这几个字母，不应该被误拒
+        String ok = "{\"answer\": \"A\", \"reasoning_steps\": [\"The room has an air conditioner.\", \"Option A fits best.\"], \"confidence\": 60}";
+        assertEquals(0, AdviceParser.parse(ok, 3).answerIndex());
+    }
+
+    @Test
     void promptFollowsTheSpecificationAndNeverContainsTheParticipantsAnswer() {
         DecisionTask t = task("SHOP-1");
         List<ChatClient.Message> messages = PromptSpec.messagesFor(t, "Shopping & Pricing");
