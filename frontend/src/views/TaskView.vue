@@ -3,6 +3,7 @@
     <div class="progress-head">
       <div class="small muted">Question {{ index + 1 }} of {{ total }}</div>
       <el-progress :percentage="progress" :show-text="false" :stroke-width="6" />
+      <ProgressDot :done="index" :total="total" />
     </div>
 
     <div v-if="loading" class="card"><el-skeleton :rows="5" animated /></div>
@@ -81,6 +82,7 @@ import { useRoute, useRouter } from 'vue-router'
 import OptionList from '../components/OptionList.vue'
 import AdviceCard from '../components/AdviceCard.vue'
 import LikertScale from '../components/LikertScale.vue'
+import ProgressDot from '../components/ProgressDot.vue'
 import { studyApi } from '../api'
 import { getSession, nextRoute, saveSession } from '../session'
 
@@ -179,7 +181,7 @@ async function submitFinal() {
   }
 }
 
-// The same component instance is reused from /task/0 to /task/1 ..., so reload when the index changes
+//The same component instance is reused from /task/0 to /task/1 ..., so reload when the index changes
 watch(
   () => route.params.index,
   (v) => {
@@ -187,6 +189,7 @@ watch(
   },
   { immediate: true }
 )
+
 </script>
 
 <style scoped>
