@@ -164,7 +164,8 @@ public class AnalyticsService {
                         s -> domainError(s, experienced)),
                 rate(surveys, s -> s.getComprehensionCorrect() != null, PostSurvey::getComprehensionCorrect),
                 mean(surveys.stream().filter(s -> s.getInfoUsefulness() != null).toList(), s -> s.getInfoUsefulness()),
-                mean(timed, t -> (t.getInitialTimeMs() + t.getFinalTimeMs()) / 1000.0));
+                mean(timed, t -> (t.getInitialTimeMs() + t.getFinalTimeMs()) / 1000.0),
+                mean(trials, t -> t.getFinalConfidence() - t.getInitialConfidence()));
     }
 
     /** Mean absolute difference between a participant's per-domain estimates and the accuracy they experienced per domain. */

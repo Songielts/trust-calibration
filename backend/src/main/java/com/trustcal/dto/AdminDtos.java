@@ -38,7 +38,8 @@ public final class AdminDtos {
             Double domainCalibrationError,
             Double comprehensionRate,
             Double infoUsefulness,
-            Double meanDecisionSeconds) {
+            Double meanDecisionSeconds,
+            Double confidenceShift) {
     }
 
     public record DomainCell(Double meanTrust, Double agreementRate, Double meanEstimate, int trials) {

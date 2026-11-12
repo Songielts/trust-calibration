@@ -390,7 +390,8 @@ const metricDefs = [
   { key: 'domainCalibrationError', label: 'Calibration error, per topic (↓)', f: pp, help: 'Mean |estimated − actual| accuracy across the four topics, in percentage points.' },
   { key: 'comprehensionRate', label: 'Understood capability signal', f: pct, help: 'Capability conditions only: share who correctly interpreted "historical accuracy".' },
   { key: 'infoUsefulness', label: 'Perceived usefulness of info (1–7)', f: (v) => dec(v) },
-  { key: 'meanDecisionSeconds', label: 'Time per question (s)', f: (v) => dec(v, 1) }
+  { key: 'meanDecisionSeconds', label: 'Time per question (s)', f: (v) => dec(v, 1) },
+  { key: 'confidenceShift', label: 'Confidence shift (pp)', f: (v) => signed(v, 1), help: 'Mean change in confidence from first to final answer, in percentage points. Positive means participants became more confident after seeing the advice.' }
 ]
 
 const allMetrics = computed(() => {
