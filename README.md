@@ -87,6 +87,7 @@ v1–v3 were built before the repository was created on 8 Nov, so the first comm
 | 11 Nov | `AdviceParser` rejects reasoning steps that say "as an AI" | The prompt forbids it, but nothing checked it | Test written first and seen to fail, then passed | [e567ae9](https://github.com/Songielts/trust-calibration/commit/e567ae9) |
 | 11 Nov | Progress dots on the question page | Practise Vue components | Same in all four conditions, so the manipulation is unchanged | [85d4c24](https://github.com/Songielts/trust-calibration/commit/85d4c24) |
 | 12 Nov | New dashboard measure: confidence shift (final − initial confidence) | Practise a full backend and frontend change | A first version gave 98.9; recomputing from the CSV gave +7.5 and revealed a wrong field, which I fixed | [9e7c10f](https://github.com/Songielts/trust-calibration/commit/9e7c10f) |
+| 14 Nov | Admin login request is validated (`@NotBlank` + `@Valid`) | An empty token should be rejected with a clear message before the token check | Empty or blank token now returns 400 "Please enter the admin token" instead of 401; a correct token still logs in | [3f39612](https://github.com/Songielts/trust-calibration/commit/3f39612) |
 | 14 Nov | Restored environment-variable defaults for the database password and API key in `application.yml` | Placeholder text had replaced them, so `DB_PASSWORD`, `LLM_API_KEY` and the Docker settings were ignored | Backend still starts locally; searched the history and no real key was ever committed | latest |
 
 Full history: [commits on `main`](https://github.com/Songielts/trust-calibration/commits/main).
@@ -103,7 +104,7 @@ Full history: [commits on `main`](https://github.com/Songielts/trust-calibration
 **What I checked or changed myself**
 - Ran the system locally, completed a full session and tried every condition; checked the stored rows in MySQL.
 - Ran two real evaluations and read every frozen answer. I found the SHOP-1 contradiction, worked out its likely cause and tested it with prompt v2.
-- Made my own changes (validation rule and test, progress component, confidence-shift measure) and recomputed reliance and confidence measures from the CSV to check the dashboard. This is how I caught the bug in my own measure.
+- Made my own changes (validation rule and test, login validation, progress component, confidence-shift measure) and recomputed reliance and confidence measures from the CSV to check the dashboard. This is how I caught the bug in my own measure.
 - Corrected AI-drafted text where it did not match what I actually did, for example dates and the scope of my checks.
 
 ## Additional files
