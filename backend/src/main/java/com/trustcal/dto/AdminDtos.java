@@ -3,14 +3,14 @@ package com.trustcal.dto;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-
+import jakarta.validation.constraints.NotBlank;
 /** Response bodies used by the researcher (admin) API. Rates are proportions 0-1; null = no data. */
 public final class AdminDtos {
 
     private AdminDtos() {
     }
 
-    public record LoginRequest(String token) {
+    public record LoginRequest(@NotBlank(message = "Please enter the admin token") String token) {
     }
 
     public record ConditionMetrics(

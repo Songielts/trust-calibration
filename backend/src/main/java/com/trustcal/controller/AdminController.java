@@ -6,6 +6,7 @@ import com.trustcal.dto.AdminDtos.*;
 import com.trustcal.service.AnalyticsService;
 import com.trustcal.service.LlmAgentService;
 import com.trustcal.service.SimulationService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -35,7 +36,7 @@ public class AdminController {
     }
 
     @PostMapping("/login")
-    public Map<String, Boolean> login(@RequestBody LoginRequest request) {
+    public Map<String, Boolean> login(@Valid @RequestBody LoginRequest request) {
         if (!webConfig.isValidAdminToken(request.token())) {
             throw new ApiException(HttpStatus.UNAUTHORIZED, "Incorrect admin token");
         }
