@@ -1,36 +1,40 @@
 # Trust Calibration Study Platform
 
-*README prose: about 1,450 words (code and commands not counted).*
+*README prose: about 1,250 words (code, commands and file paths not counted).*
 
-A web system for studying whether showing an AI agent's **capability** (its accuracy in a topic), alone or with its **step-by-step reasoning**, helps people trust the agent as much as it deserves — no more, no less. People answer 16 everyday questions, see the agent's advice, and decide whether to follow it; the system records their reliance and trust and computes trust-calibration measures for a researcher dashboard. It implements the research question from my Assignment 1 review.
+A web system for studying whether showing an AI agent's **capability signal** (its accuracy in a topic), alone or with its **step-by-step reasoning**, helps people trust the agent as much as it deserves. Participants answer 16 everyday questions, give their own answer first, then see the agent's advice and make a final decision. The system records reliance and trust, and a researcher dashboard computes trust-calibration measures. It implements the research question from my Assignment 1 review; the design rationale is in the project report.
 
-Detailed design notes, measures and API: [`docs/study-design.md`](docs/study-design.md).
+More detail on the design, measures and API: [`docs/study-design.md`](docs/study-design.md).
 
 ## Project status
 
 | Part | Status |
 |---|---|
-| Participant flow: consent → background questions → 16 two-stage questions (own answer first, then advice) → questionnaire → debrief | Implemented |
-| 2 × 2 conditions (capability signal × reasoning), balanced assignment, demo links to preview a condition | Implemented |
-| Scripted agent: answers written in advance, 12/16 correct, accuracy differs by topic | Implemented — the agent is **simulated** in this mode |
-| Capability figures in scripted mode (e.g. "92%", "RetailQA-Bench") | **Simulated** study material; the benchmark names are invented |
-| LLM agent (DeepSeek, any OpenAI-compatible API): live and pre-generated modes, JSON output validation, fallbacks | Implemented; tested with a fake model, a local mock server and the real DeepSeek API (`deepseek-chat`, 8 Nov 2026) |
-| Evaluation runs that **measure** the LLM's accuracy per topic and use it as the capability signal | Implemented; two real runs (16 tasks × 3 calls, prompt v1 and v2), every frozen answer reviewed by hand — see *LLM evaluation* below |
-| Researcher dashboard: reliance and calibration measures by condition, topic and time; CSV export | Implemented |
-| Synthetic participants for previewing the dashboard | Implemented; output is **simulated** data, never findings |
-| Pilot sessions with real people | Planned |
-| Repeated use over several weeks; multi-step agent tasks; harder questions so the LLM makes more errors | Planned — the evaluation runs show why harder questions are needed |
+| Participant flow: consent → background questions → 16 two-stage questions → questionnaire → debrief | Implemented |
+| 2 × 2 conditions (capability signal × reasoning), balanced assignment, demo links to preview each condition | Implemented |
+| Scripted agent (answers written in advance, 12/16 correct, accuracy differs by topic) | Implemented; the agent is **simulated** |
+| Capability figures in scripted mode (e.g. "92%", "RetailQA-Bench") | **Simulated** study material; benchmark names are invented |
+| LLM agent (DeepSeek): live and pre-generated modes, reply validation, fallbacks | Implemented; tested with the real API on 8 Nov 2026 |
+| Evaluation runs that measure the LLM's accuracy per topic and use it as the capability signal | Implemented; two real runs, all frozen answers reviewed by hand |
+| Researcher dashboard with reliance and calibration measures; CSV export | Implemented |
+| Synthetic participants for previewing the dashboard | Implemented; **simulated** data, never findings |
+| Pilot sessions with real participants | Planned |
+| Harder, less familiar questions so the LLM makes errors; repeated use over several weeks | Planned |
 
 ## Technology
 
 | Layer | Technology | Role |
 |---|---|---|
-| Backend | Java 17, Spring Boot 3.3, Spring Data JPA | REST API, experiment logic, analytics |
-| Database | MySQL 8 (H2 in-memory profile for quick demos) | Participants, trials, questionnaire, logged model calls |
+| Backend | Java 17, Spring Boot 3.3, Spring Data JPA | REST API, experiment rules, analytics |
+| Database | MySQL 8 (H2 in-memory profile for quick demos) | Participants, trials, questionnaires, logged model calls |
 | Frontend | Vue 3, Vite, Vue Router, Element Plus | Participant pages and researcher dashboard |
-| AI model in the system | DeepSeek `deepseek-chat` via its OpenAI-compatible API (configurable) | Generates the agent's answer and reasoning in the LLM modes |
-| AI tool used for development | Claude (Anthropic), via claude.ai | See *AI assistance* below |
-| Tests / deployment | JUnit 5, Docker Compose, nginx | `mvn test`; one-command start |
+| AI model in the system | DeepSeek `deepseek-chat` through its OpenAI-compatible API (configurable) | Generates the agent's answer and reasoning in the LLM modes |
+| AI tool for development | Claude (Anthropic), claude.ai | See *AI assistance* |
+| Tests and deployment | JUnit 5, Docker Compose, nginx | 25 tests; one-command start |
+
+**Not yet decided**
+- Which agent mode the main study will use. The scripted agent is the current choice, because the LLM answered all 16 questions correctly (see below).
+- The model name: on 8 Nov DeepSeek's API listed `deepseek-flash` and `deepseek-v4-pro`, and still accepted `deepseek-chat`. It can be changed in `application.yml`.
 
 ## Run or inspect
 
@@ -41,76 +45,71 @@ docker compose up -d --build
 Study at http://localhost:8081, dashboard at http://localhost:8081/admin (token `admin123`).
 
 **Local development** (JDK 17+, Maven, Node 18+, MySQL 8):
-1. Copy `backend/local-secrets.example.yml` to `backend/local-secrets.yml` (git-ignored) and put your MySQL password there under `spring.datasource.password`, or set `DB_PASSWORD`. The database and the 16 tasks are created automatically.
-2. Backend: `cd backend` → `mvn spring-boot:run` (check http://localhost:8080/api/health). No MySQL? add `-Dspring-boot.run.profiles=h2`.
+1. Copy `backend/local-secrets.example.yml` to `backend/local-secrets.yml` (git-ignored) and set your MySQL password there, or set the environment variable `DB_PASSWORD`. The database and the 16 tasks are created on first start.
+2. Backend: `cd backend` → `mvn spring-boot:run` (check http://localhost:8080/api/health). Without MySQL, add `-Dspring-boot.run.profiles=h2`.
 3. Frontend: `cd frontend` → `npm install` → `npm run dev`, then open http://localhost:5173 (dashboard: `/admin`).
 
-**LLM agent (optional).** Without a key everything runs with the scripted agent. To use DeepSeek, provide **your own** key — never commit it:
-- paste it into `backend/local-secrets.yml` under `llm.api-key`, **or**
-- set the environment variable `LLM_API_KEY` (for Docker: a `.env` file next to `docker-compose.yml`, also git-ignored).
+**LLM agent (optional).** Without a key, everything runs with the scripted agent. To use DeepSeek, provide **your own** key; never commit it:
+- put it in `backend/local-secrets.yml` under `llm.api-key`, or
+- set `LLM_API_KEY` (for Docker, in a git-ignored `.env` file next to `docker-compose.yml`).
 
-Then on the dashboard → **AI agent**: send a test call → run an evaluation → freeze it → choose the agent mode.
+Then, on the dashboard's **AI agent** tab: send a test call → run an evaluation → freeze it → choose the agent mode.
 
 **Preview a condition:** `/?demo=CAPABILITY_REASONING` (also `CONTROL`, `CAPABILITY`, `REASONING`; `/?demo=off` to stop). Demo sessions are excluded from the analysis.
 
-**Tests:** `cd backend` → `mvn test` (25 tests, no database or API key needed).
+**Inspect the data:** the dashboard's **Export CSV** menu gives one row per decision, per participant or per model call.
 
-## LLM evaluation
+**Tests:** `cd backend` → `mvn test` (25 tests; no database or API key needed).
 
-Each run sends all 16 tasks to the model three times with the same prompt and temperature (0.7). The system scores every reply against the answer key. The model's self-reported confidence is logged but never used as a check. Every call is in [`docs/evaluation/llm_calls_2026-11-08.csv`](docs/evaluation/llm_calls_2026-11-08.csv).
+## LLM evaluation (summary)
 
-| Run | Prompt | Valid | Correct | Shopping | Science | Health | Logic |
-|---|---|---|---|---|---|---|---|
-| #1 | v1 | 48/48 | 45/48 (94%) | 9/12 (75%) | 12/12 | 12/12 | 12/12 |
-| #2 | v2 | 48/48 | 48/48 (100%) | 12/12 | 12/12 | 12/12 | 12/12 |
+Each run sends all 16 tasks to the model three times with the same prompt, and the system checks every reply against the answer key. Every call is in [`docs/evaluation/llm_calls_2026-11-08.csv`](docs/evaluation/llm_calls_2026-11-08.csv).
 
-**Human review of run #1.** I read all 16 frozen answers against the two human criteria (the steps lead to the answer; no unneeded facts).
-- **SHOP-1:** in all three calls the reasoning concluded that Pack A was cheaper, yet the answer was B. Every reply passed the automatic checks, so only a human reader could see the contradiction.
-- **SHOP-3:** the answer was right (A) in all three calls, but two of the three reasoning chains left out the £60 upfront cost. The default frozen reply (call 9) was one of these, so I replaced it with call 24, which gives the same answer with correct reasoning.
+| Run | Prompt | Valid | Correct | By topic |
+|---|---|---|---|---|
+| #1 | v1 | 48/48 | 45/48 | Shopping 9/12, others 12/12 |
+| #2 | v2 | 48/48 | 48/48 | all 12/12 |
 
-**Prompt v2.** The v1 output format asked for `answer` before `reasoning_steps`, so the model committed to an answer before writing any reasoning. v2 changes only that order (in the format and in the example). In run #2 both problems disappeared. With three calls per task this supports the explanation but does not prove it.
+- **Run #1 review.** In SHOP-1 the reasoning concluded that Pack A was cheaper, but the answer was B, in all three calls; every reply had passed the automatic checks. In SHOP-3 the answer was right, but two of three reasoning chains left out the £60 upfront cost, so I replaced the frozen reply with one that gives the same answer with correct reasoning. I did not edit any of the model's answers.
+- **Prompt v2** changes only one thing: the reasoning comes before the answer. Both problems disappeared in run #2 (three calls per task, so a small test).
 
-**What this means for the study.** With v2 the model answered every question correctly. In LLM mode participants would therefore never meet wrong advice, so over-reliance could not be measured and the capability signal would read 100% for every topic. For this question set the scripted agent, whose errors are designed in advance, remains the main experimental condition.
+## Development record
 
-## Development log
+v1–v3 were built before the repository was created on 8 Nov, so the first commit imports v3. Later work is in separate commits.
 
-| When | Change | Why | Checked |
-|---|---|---|---|
-| Oct (A1) | Literature review and research question | Prior work tests explanations and uncertainty, but not capability signals | — |
-| 29 Oct | **v1**: scripted 2 × 2 study platform, two-stage trials, trust questionnaire, dashboard | A controlled agent is needed to know when trust *should* be high or low | In-memory test of the full flow and every measure against hand-computed values |
-| 29 Oct | Compared v1 with a second, simpler prototype (TrustLens) | To choose a base | Kept v1: TrustLens had no trust measures, participants chose their own condition, and its 3 tasks had a capability figure unrelated to real accuracy |
-| 29 Oct | **v2**: demo links, Docker, JUnit tests, pinned versions | Taken from the comparison: a condition must be easy to show without corrupting the data | 11 JUnit tests |
-| 1 Nov | **v3**: real LLM agent (DeepSeek) alongside the scripted agent; measured capability; prompt log | Weeks 3–4: reliability is a property of the system, so the capability signal should be measured, not claimed; the scripted mode stays for experimental control | 13 more tests with a fake model; HTTP client checked against a local mock server |
-| 4–5 Nov | First local run on Windows (IntelliJ IDEA, JDK 17, MySQL 8 with Navicat, Node/Vite) | To run and study the system myself | Backend, frontend and database started; completed a full participant session and checked the stored rows in MySQL |
-| 5 Nov | Start-up log line in `DataSeeder`; practice derived-query methods in `ParticipantRepository` | To see when seeding runs, and to learn how Spring Data turns method names into SQL | Log shows `Seeder running, domains = 4`; the backend starts with the new query methods |
-| 5–6 Nov | Code walk-through with the debugger and the SQL log | To understand balanced assignment, the question-order rule and transactions | Stepped through `nextBalancedCondition` (the counts matched MySQL); confirmed that skipping a question is refused by the server, not only by the page; a forced exception in `submitFinal` rolled back the update (test code removed afterwards) |
-| 8 Nov | First real DeepSeek calls and evaluation run #1 (prompt v1) | Confirm the LLM path with the real API and measure accuracy per topic | 48/48 valid, 45/48 correct; all 16 frozen answers reviewed by hand (SHOP-1 reasoning–answer contradiction; SHOP-3 faulty reasoning, frozen reply replaced) |
-| 8 Nov | **Prompt v2**: `reasoning_steps` before `answer`; evaluation run #2 | In v1 the model chose an answer before reasoning (SHOP-1) | 48/48 valid, 48/48 correct; SHOP-1 and SHOP-3 reasoning now match the answers (3 calls per task, so a small test) |
-| 9 Nov | `AdviceParser` rejects reasoning steps that say "as an AI" (+ test) | The prompt forbids it, but the parser did not check it | Test written first and seen to fail; with the rule, all 25 tests pass. I also recomputed over- and under-reliance for my own session from the exported trials and they matched the dashboard |
+| Stage | Change | Why | Checked | Commit |
+|---|---|---|---|---|
+| 29 Oct | **v1**: scripted 2 × 2 platform, two-stage trials, trust questionnaire, dashboard | A controlled agent is needed to know when trust *should* be high or low | Full flow and every measure checked against hand-computed values | before git |
+| 29 Oct | Compared v1 with a simpler prototype (TrustLens); **v2** added demo links, Docker and tests | To choose a base and show conditions without corrupting data | Kept v1: TrustLens had no trust measures and its capability figure was unrelated to real accuracy | before git |
+| 1 Nov | **v3**: real LLM agent alongside the scripted one; measured capability signal; prompt log | Reliability is a property of the system, so the signal should be measured, not claimed | Tests with a fake model; HTTP client checked against a mock server | [901d9a3](https://github.com/Songielts/trust-calibration/commit/901d9a3) |
+| 4–8 Nov | Ran the system on Windows; studied it with the debugger and SQL log; added a seeding log line and practice query methods | To run and understand the system myself | Balanced assignment matched counts in MySQL; question skipping is refused by the server; a forced exception rolled back the update | [901d9a3](https://github.com/Songielts/trust-calibration/commit/901d9a3) |
+| 8 Nov | First DeepSeek evaluation (run #1), human review, **prompt v2**, run #2 | Confirm the LLM path and measure accuracy per topic | See *LLM evaluation* | [2416650](https://github.com/Songielts/trust-calibration/commit/2416650), [841e6d2](https://github.com/Songielts/trust-calibration/commit/841e6d2) |
+| 11 Nov | `AdviceParser` rejects reasoning steps that say "as an AI" | The prompt forbids it, but nothing checked it | Test written first and seen to fail, then passed | [e567ae9](https://github.com/Songielts/trust-calibration/commit/e567ae9) |
+| 11 Nov | Progress dots on the question page | Practise Vue components | Same in all four conditions, so the manipulation is unchanged | [85d4c24](https://github.com/Songielts/trust-calibration/commit/85d4c24) |
+| 12 Nov | New dashboard measure: confidence shift (final − initial confidence) | Practise a full backend and frontend change | A first version gave 98.9; recomputing from the CSV gave +7.5 and revealed a wrong field, which I fixed | [9e7c10f](https://github.com/Songielts/trust-calibration/commit/9e7c10f) |
+| 14 Nov | Restored environment-variable defaults for the database password and API key in `application.yml` | Placeholder text had replaced them, so `DB_PASSWORD`, `LLM_API_KEY` and the Docker settings were ignored | Backend still starts locally; searched the history and no real key was ever committed | latest |
 
-Commits: the repository was created on 8 Nov. v1–v3 were built before version control, so the first commit imports v3 together with my first changes; prompt v2 and later work are separate commits in the history.
+Full history: [commits on `main`](https://github.com/Songielts/trust-calibration/commits/main).
 
 ## AI assistance
 
-I used **Claude (Anthropic, claude.ai)** throughout:
-- **Code**: asked it to implement the study from my A1 review with Spring Boot + Vue + MySQL and English UI text; it generated most of the backend and frontend code and tests.
-- **Design decisions**: asked it to compare its version with another prototype and to explain the trade-offs; I chose to keep both a scripted and a real LLM agent and to use DeepSeek.
-- **Mapping to lectures**: asked how the design relates to the Weeks 1–4 concepts.
-- **Learning the code**: used it as a tutor while I worked through the code over two weeks.
-- **README and report drafts.**
-- Added a validation rule to `AdviceParser` and wrote its test first (it failed, then passed); recomputed reliance measures from the exported CSV by hand.
-What I checked or changed myself:
-- Ran the whole system locally on Windows and completed participant sessions in each condition.
-- Checked the stored data in MySQL and followed the generated SQL with the Hibernate log.
-- Stepped through condition assignment, the question-order rule and a transaction rollback in the debugger.
-- Added a start-up log line in `DataSeeder` and practice query methods in `ParticipantRepository`.
-- Ran two real evaluation runs with DeepSeek and read every frozen answer against the human criteria; I found the SHOP-1 contradiction and the SHOP-3 reasoning error and replaced one frozen reply.
-- Diagnosed the cause of the SHOP-1 error and wrote prompt v2 to test it.
+**Tool:** Claude (Anthropic, claude.ai).
+
+**What I asked it to do**
+- Implement the study from my A1 review with Spring Boot, Vue and MySQL, with English UI text. It generated most of the backend, frontend and tests.
+- Compare its version with another prototype and explain the trade-offs. I chose to keep both a scripted and an LLM agent and to use DeepSeek.
+- Relate the design to the Weeks 1–4 concepts, act as a tutor while I worked through the code, and draft this README and the report.
+
+**What I checked or changed myself**
+- Ran the system locally, completed a full session and tried every condition; checked the stored rows in MySQL.
+- Ran two real evaluations and read every frozen answer. I found the SHOP-1 contradiction, worked out its likely cause and tested it with prompt v2.
+- Made my own changes (validation rule and test, progress component, confidence-shift measure) and recomputed reliance and confidence measures from the CSV to check the dashboard. This is how I caught the bug in my own measure.
+- Corrected AI-drafted text where it did not match what I actually did, for example dates and the scope of my checks.
 
 ## Additional files
 
-- `docs/study-design.md` — experimental design, measures, LLM agent, API.
-- `docs/evaluation/llm_calls_2026-11-08.csv` — every model call from 8 Nov (tests and evaluation runs #1–#2), with validity, correctness, frozen flags and reasoning.
-- `database/schema.sql` — MySQL schema (optional; tables are created automatically).
-- `backend/local-secrets.example.yml` — template for your own API key and database password.
+- `docs/study-design.md`: experimental design, measures, LLM agent and API.
+- `docs/evaluation/llm_calls_2026-11-08.csv`: every model call on 8 Nov (tests and runs #1–#2).
+- `database/schema.sql`: MySQL schema (optional; tables are created automatically).
+- `backend/local-secrets.example.yml`: template for your own API key and database password.
 - No ZIP is needed; everything is in this repository.
